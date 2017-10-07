@@ -571,7 +571,7 @@ public class AmazonS3 {
 			final String key, final Map<String, String> args)
 			throws IOException {
 		final StringBuilder urlstr = new StringBuilder();
-		urlstr.append("http://"); //$NON-NLS-1$
+		urlstr.append("https://"); //$NON-NLS-1$
 		urlstr.append(bucket);
 		urlstr.append('.');
 		urlstr.append(domain);
