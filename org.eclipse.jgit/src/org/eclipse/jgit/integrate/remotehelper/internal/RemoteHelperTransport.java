@@ -21,7 +21,11 @@ public class RemoteHelperTransport extends RemoteHelperProvider {
 
 		Transport transport;
 		try {
-			transport = Transport.open(context.getRepository(), context.getUrl());
+			transport = Transport.open(
+				context.getRepository(),
+				context.getUrl(),
+				context.getRemoteName()
+			);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

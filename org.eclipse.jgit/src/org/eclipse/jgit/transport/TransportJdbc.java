@@ -9,6 +9,7 @@ import org.eclipse.jgit.internal.storage.jdbc.SqlRepository;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
 import java.io.IOException;
@@ -43,6 +44,15 @@ public class TransportJdbc extends Transport {
 		}
 
 		@Override
+		public Set<URIishField> getOptionalFields() {
+			Set<URIishField> fields = new HashSet<>();
+			fields.add(URIishField.USER);
+			fields.add(URIishField.PASS);
+			fields.add(URIishField.PORT);
+			return fields;
+		}
+
+		@Override
 		public Transport open(URIish uri, Repository local, String remoteName) throws NotSupportedException, TransportException {
 			String username = uri.getUser();
 
@@ -73,6 +83,8 @@ public class TransportJdbc extends Transport {
 				remoteName,
 				"db-options"
 			);
+
+			uri = uri.setPass(null).setUser(null);
 
 			String url = uri.toASCIIString();
 
@@ -273,16 +285,20 @@ public class TransportJdbc extends Transport {
 			Set<ObjectId> objects = new HashSet<>();
 
 			try {
-				monitor.beginTask("Resolve Needed Objects", 1);
+				monitor.beginTask("Resolving Objects", 1);
+
+				monitor.update(0);
 
 				{
-					LogCommand log = Git.wrap(getSqlRepository()).log();
-
+					RevWalk revWalk = new RevWalk(getSqlRepository());
+					List<RevCommit> commitStarts = new ArrayList<>();
 					for (Ref ref : want) {
-						log.add(ref.getObjectId().copy());
+						commitStarts.add(revWalk.lookupCommit(ref.getObjectId()));
 					}
 
-					for (RevCommit commit : log.call()) {
+					revWalk.markStart(commitStarts);
+
+					for (RevCommit commit : revWalk) {
 						if (monitor.isCancelled()) {
 							return;
 						}
@@ -299,12 +315,16 @@ public class TransportJdbc extends Transport {
 
 						objects.add(tree.copy());
 						objects.add(commit.copy());
+
+						walk.close();
 					}
+
+					revWalk.close();
 				}
 
 				monitor.endTask();
 
-				monitor.beginTask("Fetch Objects", 1);
+				monitor.beginTask("Fetch Objects", objects.size());
 				for (ObjectId id : objects) {
 					if (monitor.isCancelled()) {
 						return;
@@ -316,6 +336,7 @@ public class TransportJdbc extends Transport {
 
 					ObjectLoader loader = reader.open(id);
 					inserter.insert(loader.getType(), loader.getBytes());
+					monitor.update(1);
 				}
 
 				inserter.flush();
