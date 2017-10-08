@@ -167,7 +167,7 @@ public class TransportJdbc extends Transport {
 			if (local == null) {
 				throw new TransportException("JDBC transport does not work without a local repository.");
 			}
-			
+
 			try {
 				ObjectReader reader = local.getObjectDatabase().newReader();
 
