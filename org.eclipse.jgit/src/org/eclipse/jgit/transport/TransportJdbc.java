@@ -30,6 +30,7 @@ public class TransportJdbc extends Transport {
 			Set<String> schemes = new HashSet<>();
 			schemes.add("jdbc:mysql");
 			schemes.add("mysql");
+			schemes.add("jdbc:h2");
 			return schemes;
 		}
 
@@ -112,7 +113,7 @@ public class TransportJdbc extends Transport {
 
 	@Override
 	public PushConnection openPush() throws NotSupportedException, TransportException {
-		throw new NotSupportedException("Pushing is not supported with SQL transports.");
+		return new SqlPushConnection();
 	}
 
 	@Override
@@ -155,6 +156,106 @@ public class TransportJdbc extends Transport {
 		}
 	}
 
+	class SqlPushConnection extends SqlConnection implements PushConnection {
+		@Override
+		public void push(ProgressMonitor monitor, Map<String, RemoteRefUpdate> refUpdates) throws TransportException {
+			push(monitor, refUpdates, null);
+		}
+
+		@Override
+		public void push(ProgressMonitor monitor, Map<String, RemoteRefUpdate> refUpdates, OutputStream out) throws TransportException {
+			if (local == null) {
+				throw new TransportException("JDBC transport does not work without a local repository.");
+			}
+			
+			try {
+				ObjectReader reader = local.getObjectDatabase().newReader();
+
+				Set<ObjectId> objects = new HashSet<>();
+
+				for (String key : refUpdates.keySet()) {
+					RemoteRefUpdate update = refUpdates.get(key);
+					ObjectId id = update.getNewObjectId();
+					ObjectId oldId = update.getExpectedOldObjectId();
+
+					if (AnyObjectId.equals(ObjectId.zeroId(), id)) {
+						RefUpdate refUpdate = getSqlRepository().updateRef(key);
+						refUpdate.delete();
+						continue;
+					}
+
+					LogCommand log = Git.wrap(local).log();
+					log.add(id);
+
+					for (RevCommit commit : log.call()) {
+						if (monitor.isCancelled()) {
+							return;
+						}
+
+						RevTree tree = commit.getTree();
+						TreeWalk walk = new TreeWalk(local);
+						walk.addTree(tree);
+						walk.setRecursive(true);
+						walk.setPostOrderTraversal(true);
+
+						while (walk.next()) {
+							ObjectId treeId = walk.getObjectId(0);
+
+							if (!getSqlRepository().hasObject(treeId)) {
+								objects.add(treeId.copy());
+							}
+						}
+
+						if (!getSqlRepository().hasObject(tree)) {
+							objects.add(tree.copy());
+						}
+
+						if (!getSqlRepository().hasObject(commit)) {
+							objects.add(commit.copy());
+						}
+
+						if (oldId != null && oldId.name().equals(commit.name())) {
+							break;
+						}
+					}
+				}
+
+				ObjectInserter inserter = getSqlRepository().newObjectInserter();
+				for (ObjectId send : objects) {
+					ObjectLoader loader = reader.open(send);
+
+					inserter.insert(loader.getType(), loader.getSize(), loader.openStream());
+				}
+
+				inserter.flush();
+				inserter.close();
+				reader.close();
+
+				for (String refName : refUpdates.keySet()) {
+					RemoteRefUpdate update = refUpdates.get(refName);
+					RefUpdate refUpdate = getSqlRepository().updateRef(refName);
+
+					refUpdate.setNewObjectId(update.getNewObjectId());
+					refUpdate.setExpectedOldObjectId(update.getExpectedOldObjectId());
+					refUpdate.setForceUpdate(update.isForceUpdate());
+
+					RefUpdate.Result result = refUpdate.update();
+
+					if (result == RefUpdate.Result.FAST_FORWARD ||
+						result == RefUpdate.Result.NEW) {
+						update.setStatus(RemoteRefUpdate.Status.OK);
+					}
+
+					if (result == RefUpdate.Result.NO_CHANGE) {
+						update.setStatus(RemoteRefUpdate.Status.UP_TO_DATE);
+					}
+				}
+			} catch (Exception e) {
+				throw new TransportException("Failed to push.", e);
+			}
+		}
+	}
+
 	class SqlFetchConnection extends SqlConnection implements FetchConnection {
 		@Override
 		public void fetch(ProgressMonitor monitor, Collection<Ref> want, Set<ObjectId> have) throws TransportException {
@@ -172,7 +273,7 @@ public class TransportJdbc extends Transport {
 			Set<ObjectId> objects = new HashSet<>();
 
 			try {
-				monitor.beginTask("Resolve Needed", 1);
+				monitor.beginTask("Resolve Needed Objects", 1);
 
 				{
 					LogCommand log = Git.wrap(getSqlRepository()).log();
@@ -183,7 +284,7 @@ public class TransportJdbc extends Transport {
 
 					for (RevCommit commit : log.call()) {
 						if (monitor.isCancelled()) {
-							break;
+							return;
 						}
 
 						RevTree tree = commit.getTree();
@@ -198,8 +299,6 @@ public class TransportJdbc extends Transport {
 
 						objects.add(tree.copy());
 						objects.add(commit.copy());
-
-						System.out.println("Needs " + objects.size() + " objects...");
 					}
 				}
 
@@ -208,7 +307,7 @@ public class TransportJdbc extends Transport {
 				monitor.beginTask("Fetch Objects", 1);
 				for (ObjectId id : objects) {
 					if (monitor.isCancelled()) {
-						break;
+						return;
 					}
 
 					if (local.hasObject(id)) {

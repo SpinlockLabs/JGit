@@ -173,9 +173,9 @@ public class SqlRefDatabase extends RefDatabase {
 
 				if (exists) {
 					statement = getRepository().getAdapter().createUpdateRef(
-						getNewObjectId().name(),
+						getName(),
 						getRef().isSymbolic(),
-						getName()
+						getNewObjectId().name()
 					);
 
 					if (statement.executeUpdate() == 0) {

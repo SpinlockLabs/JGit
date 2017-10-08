@@ -119,9 +119,14 @@ public class MetaServlet extends HttpServlet {
 	@Override
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
+
 		String name = filter.getClass().getName();
 		ServletContext ctx = config.getServletContext();
 		filter.init(new NoParameterFilterConfig(name, ctx));
+	}
+
+	public void doGenericInit(ServletConfig config) throws ServletException {
+		super.init(config);
 	}
 
 	@Override

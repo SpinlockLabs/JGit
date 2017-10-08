@@ -114,11 +114,10 @@ public class MySqlAdapter extends SqlDriverAdapter {
 
 	@Override
 	public PreparedStatement createUpdateRef(String name, boolean symbolic, String target) throws SQLException {
-		PreparedStatement statement = getRepository().getConnection().prepareStatement(
-			"UPDATE " + quote(getRefsTableName()) + " SET "
-				+ quote(getRefTargetColumn()) + " = ?, " + quote(getRefIsSymbolicColumn()) +
-				" = ? WHERE " + quote(getRefNameColumn()) + " = ?"
-		);
+		String query = "UPDATE " + quote(getRefsTableName()) + " SET "
+			+ quote(getRefTargetColumn()) + " = ?, " + quote(getRefIsSymbolicColumn()) +
+			" = ? WHERE " + quote(getRefNameColumn()) + " = ?";
+		PreparedStatement statement = getRepository().getConnection().prepareStatement(query);
 		statement.setString(1, target);
 		statement.setBoolean(2, symbolic);
 		statement.setString(3, name);
