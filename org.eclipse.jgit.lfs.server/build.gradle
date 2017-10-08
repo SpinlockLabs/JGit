@@ -1,0 +1,9 @@
+description = 'JGit - Large File Storage Server'
+
+dependencies {
+    compile project(':org.eclipse.jgit')
+    compile project(':org.eclipse.jgit.lfs')
+    compile project(':org.eclipse.jgit.http.apache')
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.2.4'
+    compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
+}

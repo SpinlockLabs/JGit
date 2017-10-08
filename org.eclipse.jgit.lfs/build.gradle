@@ -1,0 +1,5 @@
+description = 'JGit - Large File Storage'
+
+dependencies {
+    compile project(':org.eclipse.jgit')
+}

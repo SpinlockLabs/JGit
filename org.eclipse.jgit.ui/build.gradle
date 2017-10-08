@@ -1,0 +1,5 @@
+description = 'JGit - AWT User Interface'
+
+dependencies {
+    compile project(':org.eclipse.jgit')
+}

@@ -1,5 +1,8 @@
 /.project
 /target
+/build/
+/*/build/
+/.gradle/
 .DS_Store
 infer-out
 bazel-*

@@ -1,0 +1,22 @@
+description = 'JGit - Command Line Interface'
+
+dependencies {
+    compile group: 'args4j', name: 'args4j', version: '2.33'
+    compile group: 'org.apache.commons', name: 'commons-compress', version: '1.6'
+    compile project(':org.eclipse.jgit.archive')
+    compile project(':org.eclipse.jgit')
+    compile project(':org.eclipse.jgit.ui')
+    compile project(':org.eclipse.jgit.http.apache')
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3.6'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.2'
+    compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.2'
+    compile(group: 'log4j', name: 'log4j', version: '1.2.15') {
+        exclude(module: 'mail')
+        exclude(module: 'jms')
+        exclude(module: 'jmxtools')
+        exclude(module: 'jmxri')
+    }
+    compile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.5.v20170502'
+    compile project(':org.eclipse.jgit.lfs')
+    compile project(':org.eclipse.jgit.lfs.server')
+}

@@ -1,0 +1,36 @@
+rootProject.name = 'org.eclipse.jgit-parent'
+include ':org.eclipse.jgit'
+include ':org.eclipse.jgit.ant'
+include ':org.eclipse.jgit.archive'
+include ':org.eclipse.jgit.ui'
+include ':org.eclipse.jgit.http.apache'
+include ':org.eclipse.jgit.http.server'
+include ':org.eclipse.jgit.pgm'
+include ':org.eclipse.jgit.lfs'
+include ':org.eclipse.jgit.lfs.server'
+include ':org.eclipse.jgit.junit'
+include ':org.eclipse.jgit.junit.http'
+include ':org.eclipse.jgit.test'
+include ':org.eclipse.jgit.ant.test'
+include ':org.eclipse.jgit.http.test'
+include ':org.eclipse.jgit.pgm.test'
+include ':org.eclipse.jgit.lfs.test'
+include ':org.eclipse.jgit.lfs.server.test'
+
+project(':org.eclipse.jgit').projectDir = "$rootDir/org.eclipse.jgit" as File
+project(':org.eclipse.jgit.ant').projectDir = "$rootDir/org.eclipse.jgit.ant" as File
+project(':org.eclipse.jgit.archive').projectDir = "$rootDir/org.eclipse.jgit.archive" as File
+project(':org.eclipse.jgit.ui').projectDir = "$rootDir/org.eclipse.jgit.ui" as File
+project(':org.eclipse.jgit.http.apache').projectDir = "$rootDir/org.eclipse.jgit.http.apache" as File
+project(':org.eclipse.jgit.http.server').projectDir = "$rootDir/org.eclipse.jgit.http.server" as File
+project(':org.eclipse.jgit.pgm').projectDir = "$rootDir/org.eclipse.jgit.pgm" as File
+project(':org.eclipse.jgit.lfs').projectDir = "$rootDir/org.eclipse.jgit.lfs" as File
+project(':org.eclipse.jgit.lfs.server').projectDir = "$rootDir/org.eclipse.jgit.lfs.server" as File
+project(':org.eclipse.jgit.junit').projectDir = "$rootDir/org.eclipse.jgit.junit" as File
+project(':org.eclipse.jgit.junit.http').projectDir = "$rootDir/org.eclipse.jgit.junit.http" as File
+project(':org.eclipse.jgit.test').projectDir = "$rootDir/org.eclipse.jgit.test" as File
+project(':org.eclipse.jgit.ant.test').projectDir = "$rootDir/org.eclipse.jgit.ant.test" as File
+project(':org.eclipse.jgit.http.test').projectDir = "$rootDir/org.eclipse.jgit.http.test" as File
+project(':org.eclipse.jgit.pgm.test').projectDir = "$rootDir/org.eclipse.jgit.pgm.test" as File
+project(':org.eclipse.jgit.lfs.test').projectDir = "$rootDir/org.eclipse.jgit.lfs.test" as File
+project(':org.eclipse.jgit.lfs.server.test').projectDir = "$rootDir/org.eclipse.jgit.lfs.server.test" as File

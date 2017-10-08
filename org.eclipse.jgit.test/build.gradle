@@ -1,0 +1,18 @@
+description = 'JGit - Core Tests'
+
+dependencies {
+    compile group: 'junit', name: 'junit', version: '4.12'
+    compile project(':org.eclipse.jgit')
+    compile project(':org.eclipse.jgit.junit')
+    compile project(':org.eclipse.jgit.ui')
+    compile project(':org.eclipse.jgit.pgm')
+    testCompile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.52'
+    testCompile group: 'org.hamcrest', name: 'hamcrest-library', version: '[1.1.0,2.0.0)'
+}
+
+task packageTests(type: Jar) {
+    from sourceSets.test.output
+    classifier = 'tests'
+}
+
+artifacts.archives packageTests

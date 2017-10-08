@@ -1,0 +1,5 @@
+description = 'JGit - Apache httpclient based HTTP support'
+
+dependencies {
+    compile project(':org.eclipse.jgit')
+}
