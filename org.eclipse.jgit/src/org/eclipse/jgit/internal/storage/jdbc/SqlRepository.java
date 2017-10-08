@@ -1,10 +1,14 @@
 package org.eclipse.jgit.internal.storage.jdbc;
 
+import org.eclipse.jgit.attributes.AttributesNode;
 import org.eclipse.jgit.attributes.AttributesNodeProvider;
+import org.eclipse.jgit.attributes.AttributesRule;
 import org.eclipse.jgit.lib.*;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
+import java.util.Collections;
 
 public class SqlRepository extends Repository {
 	private final Connection connection;
@@ -16,8 +20,16 @@ public class SqlRepository extends Repository {
 		this(connection, new MySqlAdapter());
 	}
 
+	public SqlRepository(Connection connection, BaseRepositoryBuilder builder) {
+		this(connection, new MySqlAdapter(), builder);
+	}
+
 	public SqlRepository(Connection connection, SqlDriverAdapter adapter) {
-		super(new BaseRepositoryBuilder());
+		this(connection, adapter, new BaseRepositoryBuilder());
+	}
+
+	public SqlRepository(Connection connection, SqlDriverAdapter adapter, BaseRepositoryBuilder builder) {
+		super(builder);
 
 		this.connection = connection;
 		this.adapter = adapter;
@@ -66,7 +78,7 @@ public class SqlRepository extends Repository {
 
 	@Override
 	public AttributesNodeProvider createAttributesNodeProvider() {
-		return null;
+		return new EmptyAttributesNodeProvider();
 	}
 
 	@Override
@@ -88,5 +100,32 @@ public class SqlRepository extends Repository {
 
 	public SqlDriverAdapter getAdapter() {
 		return adapter;
+	}
+
+	private static class EmptyAttributesNodeProvider implements
+		AttributesNodeProvider {
+		private EmptyAttributesNode emptyAttributesNode = new EmptyAttributesNode();
+
+		@Override
+		public AttributesNode getInfoAttributesNode() throws IOException {
+			return emptyAttributesNode;
+		}
+
+		@Override
+		public AttributesNode getGlobalAttributesNode() throws IOException {
+			return emptyAttributesNode;
+		}
+
+		private static class EmptyAttributesNode extends AttributesNode {
+
+			public EmptyAttributesNode() {
+				super(Collections.<AttributesRule> emptyList());
+			}
+
+			@Override
+			public void parse(InputStream in) throws IOException {
+				// Do nothing
+			}
+		}
 	}
 }
