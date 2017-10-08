@@ -26,6 +26,7 @@ org.eclipse.jgit.pgm.Push
 org.eclipse.jgit.pgm.ReceivePack
 org.eclipse.jgit.pgm.Reflog
 org.eclipse.jgit.pgm.Remote
+org.eclipse.jgit.pgm.RemoteHelper
 org.eclipse.jgit.pgm.Repo
 org.eclipse.jgit.pgm.Reset
 org.eclipse.jgit.pgm.RevList
