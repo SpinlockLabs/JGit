@@ -130,7 +130,11 @@ public class SqlObjectDatabase extends ObjectDatabase {
 				);
 				ResultSet results = statement.executeQuery();
 				if (!results.next()) {
-					throw new MissingObjectException(objectId.toObjectId(), typeHint);
+					if (typeHint == Constants.OBJ_BAD) {
+						throw new MissingObjectException(objectId.toObjectId(), "unknown");
+					} else {
+						throw new MissingObjectException(objectId.toObjectId(), typeHint);
+					}
 				}
 
 				cachedSize = results.getLong(parent.getAdapter().getObjectSizeColumn());

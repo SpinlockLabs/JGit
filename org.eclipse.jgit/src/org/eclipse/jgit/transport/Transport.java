@@ -121,6 +121,7 @@ public abstract class Transport implements AutoCloseable {
 		register(TransportHttp.PROTO_FTP);
 		register(TransportHttp.PROTO_HTTP);
 		register(TransportGitSsh.PROTO_SSH);
+		register(TransportJdbc.PROTO_JDBC);
 
 		registerByService();
 	}

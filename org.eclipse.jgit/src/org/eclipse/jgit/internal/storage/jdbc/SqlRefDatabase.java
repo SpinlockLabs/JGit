@@ -221,15 +221,33 @@ public class SqlRefDatabase extends RefDatabase {
 		@Override
 		protected Result doLink(String target) throws IOException {
 			try {
-				PreparedStatement statement = getRepository().getAdapter().createLinkRef(
-					getName(),
-					target
-				);
+				PreparedStatement statement = getRepository().getAdapter().createReadRef(getName());
+				ResultSet results = statement.executeQuery();
+				boolean exists = results.next();
+				results.close();
 
-				if (!statement.execute()) {
-					return Result.REJECTED;
+				if (exists) {
+					statement = getRepository().getAdapter().createUpdateRef(
+						getName(),
+						true,
+						target
+					);
+
+					if (statement.executeUpdate() == 0) {
+						return Result.REJECTED;
+					}
+					return Result.NEW;
+				} else {
+					statement = getRepository().getAdapter().createLinkRef(
+						getName(),
+						target
+					);
+
+					if (statement.executeUpdate() == 0) {
+						return Result.REJECTED;
+					}
+					return Result.NEW;
 				}
-				return Result.NEW;
 			} catch (SQLException e) {
 				throw new IOException(e);
 			}

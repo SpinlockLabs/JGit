@@ -24,23 +24,35 @@ public class MySqlAdapter extends SqlDriverAdapter {
 	@Override
 	public boolean checkObjectsTableExists() throws SQLException {
 		ResultSet results = getRepository().getConnection().prepareStatement(
-			"SHOW TABLES LIKE '" + getObjectsTableName() + "'"
+			"SHOW TABLES"
 		).executeQuery();
 
-		boolean exists = results.next();
+		while (results.next()) {
+			if (getObjectsTableName().equalsIgnoreCase(results.getString(1))) {
+				results.close();
+				return true;
+			}
+		}
+
 		results.close();
-		return exists;
+		return false;
 	}
 
 	@Override
 	public boolean checkRefsTableExists() throws SQLException {
 		ResultSet results = getRepository().getConnection().prepareStatement(
-			"SHOW TABLES LIKE '" + getRefsTableName() + "'"
+			"SHOW TABLES"
 		).executeQuery();
 
-		boolean exists = results.next();
+		while (results.next()) {
+			if (getRefsTableName().equalsIgnoreCase(results.getString(1))) {
+				results.close();
+				return true;
+			}
+		}
+
 		results.close();
-		return exists;
+		return false;
 	}
 
 	@Override
@@ -128,10 +140,20 @@ public class MySqlAdapter extends SqlDriverAdapter {
 		return statement;
 	}
 
+	private boolean isRealMySql() throws SQLException {
+		return getRepository().getConnection().getMetaData().getDriverName().contains("MySQL");
+	}
+
 	@Override
 	public PreparedStatement createObjectsTable() throws SQLException {
 		String query = "CREATE TABLE " + quote(getObjectsTableName()) + " (" +
-			"" + quote(getObjectHashColumn()) + " VARCHAR(512) CHAR SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY," +
+			"" + quote(getObjectHashColumn()) + " VARCHAR(512)";
+
+		if (isRealMySql()) {
+			query += " CHARACTER SET ascii COLLATE ascii_bin";
+		}
+
+		query += " NOT NULL PRIMARY KEY," +
 			"" + quote(getObjectTypeColumn()) + " TINYINT(4) NOT NULL," +
 			"" + quote(getObjectContentColumn()) + " LONGBLOB NOT NULL" +
 			")";
@@ -142,7 +164,13 @@ public class MySqlAdapter extends SqlDriverAdapter {
 	@Override
 	public PreparedStatement createRefsTable() throws SQLException {
 		String query = "CREATE TABLE " + quote(getRefsTableName()) + " (" +
-			quote(getRefNameColumn()) + " VARCHAR(512) CHAR SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY," +
+			quote(getRefNameColumn()) + " VARCHAR(512)";
+
+		if (isRealMySql()) {
+			query += " CHARACTER SET ascii COLLATE ascii_bin";
+		}
+
+		query += " NOT NULL PRIMARY KEY," +
 			quote(getRefIsSymbolicColumn()) + " BOOLEAN NOT NULL," +
 			quote(getRefTargetColumn()) + " VARCHAR(512) NOT NULL" +
 			")";
