@@ -41,6 +41,8 @@ public abstract class SqlDriverAdapter {
 		String prefix
 	) throws SQLException;
 
+	public abstract PreparedStatement createObjectCount() throws SQLException;
+
 	public abstract PreparedStatement createUpdateRef(String name, boolean symbolic, String target) throws SQLException;
 	public abstract PreparedStatement createRef(String name, boolean symbolic, String target) throws SQLException;
 

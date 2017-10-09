@@ -63,6 +63,21 @@ public class SqlObjectDatabase extends ObjectDatabase {
 		}
 	}
 
+	public int getObjectCount() throws IOException {
+		try {
+			PreparedStatement statement = parent.getAdapter().createObjectCount();
+			ResultSet results = statement.executeQuery();
+
+			if (!results.next()) {
+				return -1;
+			}
+
+			return results.getInt(1);
+		} catch (SQLException e) {
+			throw new IOException(e);
+		}
+	}
+
 	public class SqlObjectReader extends ObjectReader {
 		@Override
 		public ObjectReader newReader() {

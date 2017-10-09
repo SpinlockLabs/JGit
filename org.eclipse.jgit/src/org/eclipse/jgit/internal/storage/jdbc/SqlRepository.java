@@ -102,6 +102,10 @@ public class SqlRepository extends Repository {
 		return adapter;
 	}
 
+	public int getNumberOfObjects() throws IOException {
+		return getObjectDatabase().getObjectCount();
+	}
+
 	private static class EmptyAttributesNodeProvider implements
 		AttributesNodeProvider {
 		private EmptyAttributesNode emptyAttributesNode = new EmptyAttributesNode();

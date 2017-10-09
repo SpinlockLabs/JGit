@@ -113,6 +113,15 @@ public class MySqlAdapter extends SqlDriverAdapter {
 	}
 
 	@Override
+	public PreparedStatement createObjectCount() throws SQLException {
+		PreparedStatement statement = getRepository().getConnection().prepareStatement(
+			"SELECT COUNT(*) AS count FROM " + quote(getObjectsTableName())
+		);
+
+		return statement;
+	}
+
+	@Override
 	public PreparedStatement createUpdateRef(String name, boolean symbolic, String target) throws SQLException {
 		String query = "UPDATE " + quote(getRefsTableName()) + " SET "
 			+ quote(getRefTargetColumn()) + " = ?, " + quote(getRefIsSymbolicColumn()) +

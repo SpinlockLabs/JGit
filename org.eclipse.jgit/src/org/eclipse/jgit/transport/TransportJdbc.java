@@ -280,12 +280,25 @@ public class TransportJdbc extends Transport {
 				throw new TransportException("JDBC transport does not work without a local repository.");
 			}
 
-			ObjectReader reader = getSqlRepository().getObjectDatabase().newReader();
+			ObjectReader reader = getSqlRepository()
+				.getObjectDatabase()
+				.newCachedDatabase()
+				.newReader();
 			ObjectInserter inserter = local.newObjectInserter();
 			Set<ObjectId> objects = new HashSet<>();
 
 			try {
-				monitor.beginTask("Resolving Objects", 1);
+				int potentialObjectCount = 1;
+
+				try {
+					potentialObjectCount = getSqlRepository().getNumberOfObjects();
+				} catch (IOException ignored) {
+					ignored.printStackTrace();
+				}
+
+				monitor.beginTask("Resolving Objects", potentialObjectCount);
+
+				int lastSize = 0;
 
 				monitor.update(0);
 
@@ -313,18 +326,19 @@ public class TransportJdbc extends Transport {
 							objects.add(walk.getObjectId(0).copy());
 						}
 
-						objects.add(tree.copy());
 						objects.add(commit.copy());
 
 						walk.close();
+
+						int diff = objects.size() - lastSize;
+						monitor.update(diff);
+						lastSize = objects.size();
 					}
 
 					revWalk.close();
 				}
 
-				monitor.endTask();
-
-				monitor.beginTask("Fetch Objects", objects.size());
+				monitor.beginTask("Download Objects", objects.size());
 				for (ObjectId id : objects) {
 					if (monitor.isCancelled()) {
 						return;
@@ -342,8 +356,6 @@ public class TransportJdbc extends Transport {
 				inserter.flush();
 				inserter.close();
 				reader.close();
-
-				monitor.endTask();
 			} catch (Exception e) {
 				throw new TransportException("Failed to fetch.", e);
 			}
