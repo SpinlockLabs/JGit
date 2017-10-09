@@ -9,11 +9,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class MySqlAdapter extends SqlDriverAdapter {
-	private static String quote(String n) {
+	protected static String quote(String n) {
 		return '`' + n + '`';
 	}
 
-	private static String columnNames(String... names) {
+	protected static String columnNames(String... names) {
 		ArrayList<String> realNames = new ArrayList<>(names.length);
 		for (int i = 0; i < names.length; i++) {
 			realNames.add(quote(names[i]));
@@ -56,16 +56,18 @@ public class MySqlAdapter extends SqlDriverAdapter {
 	}
 
 	@Override
-	public PreparedStatement createInsertObject() throws SQLException {
+	public PreparedStatement createInsertObjectBatch() throws SQLException {
+		String query = "INSERT INTO " + quote(getObjectsTableName()) + " (" +
+			columnNames(getObjectHashColumn(), getObjectTypeColumn(), getObjectContentColumn()) +
+			") VALUES (?, ?, ?)";
+
 		return getRepository().getConnection().prepareStatement(
-			"INSERT INTO " + quote(getObjectsTableName()) + " (" +
-				columnNames(getObjectHashColumn(), getObjectTypeColumn(), getObjectContentColumn()) +
-				") VALUES (?, ?, ?)"
+			query
 		);
 	}
 
 	@Override
-	public void addInsertedObject(PreparedStatement statement, String hash, int type, InputStream stream) throws SQLException {
+	public void createInsertObjectBatch(PreparedStatement statement, String hash, int type, InputStream stream) throws SQLException {
 		statement.setString(1, hash);
 		statement.setInt(2, type);
 		statement.setBlob(3, stream);

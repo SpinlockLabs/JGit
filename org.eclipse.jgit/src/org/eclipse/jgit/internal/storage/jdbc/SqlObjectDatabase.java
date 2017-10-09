@@ -226,7 +226,7 @@ public class SqlObjectDatabase extends ObjectDatabase {
 	}
 
 	public class SqlObjectInserter extends ObjectInserter {
-		private PreparedStatement statement;
+		private PreparedStatement cachedStatement;
 
 		void writeHeader(OutputStream out, final int type, long len)
 				throws IOException {
@@ -260,16 +260,29 @@ public class SqlObjectDatabase extends ObjectDatabase {
 				byte[] bytes = out.toByteArray();
 				ObjectId id = sha.toObjectId();
 
-				if (statement == null) {
-					statement = parent.getAdapter().createInsertObject();
-				}
+				if (parent.getAdapter().doesSupportBatchInsertObject()) {
+					if (cachedStatement == null) {
+						cachedStatement = parent.getAdapter().createInsertObjectBatch();
+					}
 
-				parent.getAdapter().addInsertedObject(
-					statement,
-					id.name(),
-					objectType,
-					new ByteArrayInputStream(bytes)
-				);
+					parent.getAdapter().createInsertObjectBatch(
+						cachedStatement,
+						id.name(),
+						objectType,
+						new ByteArrayInputStream(bytes)
+					);
+				} else {
+					PreparedStatement statement = parent.getAdapter().createInsertObject(
+						id.name(),
+						objectType,
+						new ByteArrayInputStream(bytes)
+					);
+
+					if (statement.executeUpdate() != 1) {
+						throw new SQLException("Failed to insert object " + id.name());
+					}
+					statement.close();
+				}
 				return id;
 			} catch (SQLException e) {
 				throw new IOException(e);
@@ -288,12 +301,12 @@ public class SqlObjectDatabase extends ObjectDatabase {
 
 		@Override
 		public void flush() throws IOException {
-			if (statement == null) {
+			if (cachedStatement == null) {
 				return;
 			}
 
 			try {
-				statement.executeBatch();
+				cachedStatement.executeBatch();
 			} catch (SQLException e) {
 				throw new IOException(e);
 			}
@@ -301,16 +314,18 @@ public class SqlObjectDatabase extends ObjectDatabase {
 
 		@Override
 		public void close() {
-			if (statement == null) {
+			if (cachedStatement == null) {
 				return;
 			}
 
 			try {
-				statement.executeBatch();
-				statement.close();
+				cachedStatement.executeBatch();
+				cachedStatement.close();
 			} catch (SQLException e) {
 				throw new RuntimeException(e);
 			}
+
+
 		}
 	}
 

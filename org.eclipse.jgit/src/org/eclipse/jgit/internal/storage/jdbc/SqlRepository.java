@@ -8,16 +8,30 @@ import org.eclipse.jgit.lib.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Collections;
 
 public class SqlRepository extends Repository {
+	private static SqlDriverAdapter detectAdapter(Connection connection) {
+		try {
+			String name = connection.getMetaData().getDriverName();
+
+			if (name.contains("SQLite")) {
+				return new SqliteAdapter();
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		return new MySqlAdapter();
+	}
+
 	private final Connection connection;
 	private final SqlDriverAdapter adapter;
 	private final SqlObjectDatabase objectDatabase;
 	private final SqlRefDatabase refDatabase;
 
 	public SqlRepository(Connection connection) {
-		this(connection, new MySqlAdapter());
+		this(connection, detectAdapter(connection));
 	}
 
 	public SqlRepository(Connection connection, BaseRepositoryBuilder builder) {

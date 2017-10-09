@@ -14,14 +14,31 @@ public abstract class SqlDriverAdapter {
 	 * Create insert object prepared statement.
 	 * @return prepared statement.
 	 */
-	public abstract PreparedStatement createInsertObject() throws SQLException;
+	public abstract PreparedStatement createInsertObjectBatch() throws SQLException;
 
-	public abstract void addInsertedObject(
+	public abstract void createInsertObjectBatch(
 		PreparedStatement statement,
 		String hash,
 		int type,
 		InputStream stream
 	) throws SQLException;
+
+	public boolean doesSupportBatchInsertObject() {
+		return true;
+	}
+
+	public PreparedStatement createInsertObject(
+		String hash,
+		int type,
+		InputStream stream
+	) throws SQLException {
+		if (doesSupportBatchInsertObject()) {
+			throw new RuntimeException("This SQL driver supports batched insertion of objects.");
+		}
+		throw new RuntimeException(
+			"This SQL driver indicated singular object insertion" +
+			", but didn't implement it.");
+	}
 
 	/**
 	 * Creates a statement that reads object metadata
