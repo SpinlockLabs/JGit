@@ -8,17 +8,21 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class MySqlAdapter extends SqlDriverAdapter {
-	protected static String quote(String n) {
+public class MySqlLikeAdapter extends SqlDriverAdapter {
+	protected String quote(String n) {
 		return '`' + n + '`';
 	}
 
-	protected static String columnNames(String... names) {
+	protected String columnNames(String... names) {
 		ArrayList<String> realNames = new ArrayList<>(names.length);
 		for (int i = 0; i < names.length; i++) {
 			realNames.add(quote(names[i]));
 		}
 		return StringUtils.join(realNames, ",");
+	}
+
+	protected String getBlobType() {
+		return "LONGBLOB";
 	}
 
 	@Override
@@ -116,11 +120,9 @@ public class MySqlAdapter extends SqlDriverAdapter {
 
 	@Override
 	public PreparedStatement createObjectCount() throws SQLException {
-		PreparedStatement statement = getRepository().getConnection().prepareStatement(
+		return getRepository().getConnection().prepareStatement(
 			"SELECT COUNT(*) AS count FROM " + quote(getObjectsTableName())
 		);
-
-		return statement;
 	}
 
 	@Override
@@ -164,8 +166,8 @@ public class MySqlAdapter extends SqlDriverAdapter {
 		}
 
 		query += " NOT NULL PRIMARY KEY," +
-			"" + quote(getObjectTypeColumn()) + " TINYINT(4) NOT NULL," +
-			"" + quote(getObjectContentColumn()) + " LONGBLOB NOT NULL" +
+			"" + quote(getObjectTypeColumn()) + " SMALLINT NOT NULL," +
+			"" + quote(getObjectContentColumn()) + " " + getBlobType() + " NOT NULL" +
 			")";
 
 		return getRepository().getConnection().prepareStatement(query);

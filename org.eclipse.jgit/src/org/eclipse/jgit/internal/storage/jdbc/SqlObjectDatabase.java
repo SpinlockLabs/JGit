@@ -62,7 +62,9 @@ public class SqlObjectDatabase extends ObjectDatabase {
 	@Override
 	public void close() {
 		try {
-			parent.getConnection().close();
+			if (!parent.getConnection().getAutoCommit()) {
+				parent.getConnection().commit();
+			}
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
@@ -218,15 +220,25 @@ public class SqlObjectDatabase extends ObjectDatabase {
 					throw new MissingObjectException(objectId.toObjectId(), typeHint);
 				}
 
-				Blob blob = results.getBlob(parent.getAdapter().getObjectContentColumn());
-				cacheLoaded = true;
-				cachedSize = blob.length();
-				cachedType = results.getInt(parent.getAdapter().getObjectTypeColumn());
-				return new BlobObjectStream(
-					blob,
-					statement,
-					cachedType
-				);
+
+				if (parent.getAdapter().canUseBlob()) {
+					Blob blob = results.getBlob(parent.getAdapter().getObjectContentColumn());
+					cacheLoaded = true;
+					cachedSize = blob.length();
+					cachedType = results.getInt(parent.getAdapter().getObjectTypeColumn());
+					return new BlobObjectStream(
+						blob,
+						statement,
+						cachedType
+					);
+				} else {
+					byte[] bytes = results.getBytes(parent.getAdapter().getObjectContentColumn());
+					cacheLoaded = true;
+					cachedSize = bytes.length;
+					cachedType = results.getInt(parent.getAdapter().getObjectTypeColumn());
+					cachedBlobData = bytes;
+					return new ObjectStream.SmallStream(cachedType, cachedBlobData);
+				}
 			} catch (SQLException e) {
 				throw new IOException(e);
 			}
@@ -309,6 +321,14 @@ public class SqlObjectDatabase extends ObjectDatabase {
 
 		@Override
 		public void flush() throws IOException {
+			try {
+				if (!parent.getConnection().getAutoCommit()) {
+					parent.getConnection().commit();
+				}
+			} catch (SQLException e) {
+				throw new IOException(e);
+			}
+
 			if (cachedStatement == null) {
 				return;
 			}
@@ -318,22 +338,17 @@ public class SqlObjectDatabase extends ObjectDatabase {
 			} catch (SQLException e) {
 				throw new IOException(e);
 			}
+
+			cachedStatement = null;
 		}
 
 		@Override
 		public void close() {
-			if (cachedStatement == null) {
-				return;
-			}
-
 			try {
-				cachedStatement.executeBatch();
-				cachedStatement.close();
-			} catch (SQLException e) {
+				flush();
+			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-
-
 		}
 	}
 

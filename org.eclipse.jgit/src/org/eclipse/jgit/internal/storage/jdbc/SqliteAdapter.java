@@ -9,7 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class SqliteAdapter extends MySqlAdapter {
+public class SqliteAdapter extends MySqlLikeAdapter {
 	@Override
 	public boolean checkObjectsTableExists() throws SQLException {
 		ResultSet results = getRepository().getConnection().prepareStatement(

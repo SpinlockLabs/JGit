@@ -137,7 +137,9 @@ public class SqlRefDatabase extends RefDatabase {
 	@Override
 	public void close() {
 		try {
-			parent.getConnection().close();
+			if (!parent.getConnection().getAutoCommit()) {
+				parent.getConnection().commit();
+			}
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}

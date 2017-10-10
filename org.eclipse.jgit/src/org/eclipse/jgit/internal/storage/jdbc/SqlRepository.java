@@ -14,15 +14,17 @@ import java.util.Collections;
 public class SqlRepository extends Repository {
 	private static SqlDriverAdapter detectAdapter(Connection connection) {
 		try {
-			String name = connection.getMetaData().getDriverName();
+			String name = connection.getMetaData().getDriverName().toLowerCase();
 
-			if (name.contains("SQLite")) {
+			if (name.contains("sqlite")) {
 				return new SqliteAdapter();
+			} else if (name.contains("postgres")) {
+				return new PostgresAdapter();
 			}
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
-		return new MySqlAdapter();
+		return new MySqlLikeAdapter();
 	}
 
 	private final Connection connection;
@@ -35,7 +37,7 @@ public class SqlRepository extends Repository {
 	}
 
 	public SqlRepository(Connection connection, BaseRepositoryBuilder builder) {
-		this(connection, new MySqlAdapter(), builder);
+		this(connection, new MySqlLikeAdapter(), builder);
 	}
 
 	public SqlRepository(Connection connection, SqlDriverAdapter adapter) {
@@ -51,6 +53,11 @@ public class SqlRepository extends Repository {
 		this.refDatabase = new SqlRefDatabase(this);
 
 		adapter.setRepository(this);
+		try {
+			adapter.applyToConnection(connection);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override

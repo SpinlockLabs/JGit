@@ -1,11 +1,14 @@
 package org.eclipse.jgit.internal.storage.jdbc;
 
 import java.io.InputStream;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public abstract class SqlDriverAdapter {
 	private SqlRepository repository;
+
+	public void applyToConnection(Connection connection) throws SQLException {}
 
 	public abstract boolean checkObjectsTableExists() throws SQLException;
 	public abstract boolean checkRefsTableExists() throws SQLException;
@@ -118,5 +121,9 @@ public abstract class SqlDriverAdapter {
 
 	public SqlRepository getRepository() {
 		return repository;
+	}
+
+	public boolean canUseBlob() {
+		return true;
 	}
 }
