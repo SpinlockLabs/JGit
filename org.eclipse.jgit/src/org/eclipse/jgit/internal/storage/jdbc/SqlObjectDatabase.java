@@ -4,10 +4,15 @@ import org.eclipse.jgit.errors.LargeObjectException;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.transport.PackParser;
+import org.eclipse.jgit.util.IO;
 import org.eclipse.jgit.util.sha1.SHA1;
 
 import java.io.*;
-import java.sql.*;
+import java.nio.ByteBuffer;
+import java.sql.Blob;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -189,7 +194,8 @@ public class SqlObjectDatabase extends ObjectDatabase {
 		public byte[] getCachedBytes() throws LargeObjectException {
 			if (cachedBlobData == null) {
 				try {
-					openStream().close();
+					ByteBuffer buffer = IO.readWholeStream(openStream(), (int) getSize());
+					return cachedBlobData = buffer.array();
 				} catch (IOException e) {
 					throw new LargeObjectException();
 				}
@@ -212,13 +218,15 @@ public class SqlObjectDatabase extends ObjectDatabase {
 					throw new MissingObjectException(objectId.toObjectId(), typeHint);
 				}
 
-				byte[] bytes = results.getBytes(parent.getAdapter().getObjectContentColumn());
+				Blob blob = results.getBlob(parent.getAdapter().getObjectContentColumn());
 				cacheLoaded = true;
-				cachedSize = bytes.length;
-				cachedBlobData = bytes;
+				cachedSize = blob.length();
 				cachedType = results.getInt(parent.getAdapter().getObjectTypeColumn());
-				statement.close();
-				return new ObjectStream.SmallStream(cachedType, bytes);
+				return new BlobObjectStream(
+					blob,
+					statement,
+					cachedType
+				);
 			} catch (SQLException e) {
 				throw new IOException(e);
 			}
@@ -360,10 +368,6 @@ public class SqlObjectDatabase extends ObjectDatabase {
 		@Override
 		public void flush() throws IOException {
 			out.flush();
-		}
-
-		public boolean isWriteToSecondary() {
-			return writeToSecondary;
 		}
 
 		public void setWriteToSecondary(boolean writeToSecondary) {

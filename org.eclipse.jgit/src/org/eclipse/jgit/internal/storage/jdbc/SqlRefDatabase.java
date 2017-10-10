@@ -90,7 +90,11 @@ public class SqlRefDatabase extends RefDatabase {
 				}
 				return new SymbolicRef(name, targetRef);
 			} else {
-				return new SqlObjectIdRef(Ref.Storage.LOOSE, name, ObjectId.fromString(target));
+				return new SqlObjectIdRef(
+					Ref.Storage.LOOSE,
+					name,
+					ObjectId.fromString(target)
+				);
 			}
 		} catch (SQLException e) {
 			throw new IOException(e);
