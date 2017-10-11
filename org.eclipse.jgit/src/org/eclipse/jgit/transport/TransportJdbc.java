@@ -340,10 +340,15 @@ public class TransportJdbc extends Transport {
 						walk.setPostOrderTraversal(true);
 
 						while (walk.next()) {
-							objects.add(walk.getObjectId(0).copy());
+							ObjectId treeId = walk.getObjectId(0);
+							if (localDoesNotHaveObject(treeId)) {
+								objects.add(treeId);
+							}
 						}
 
-						objects.add(commit.copy());
+						if (localDoesNotHaveObject(commit)) {
+							objects.add(commit);
+						}
 
 						walk.close();
 
@@ -359,10 +364,6 @@ public class TransportJdbc extends Transport {
 				for (ObjectId id : objects) {
 					if (monitor.isCancelled()) {
 						return;
-					}
-
-					if (local.hasObject(id)) {
-						continue;
 					}
 
 					ObjectLoader loader = reader.open(id);
@@ -395,6 +396,10 @@ public class TransportJdbc extends Transport {
 		@Override
 		public Collection<PackLock> getPackLocks() {
 			return Collections.emptyList();
+		}
+
+		public boolean localDoesNotHaveObject(ObjectId objectId) {
+			return local == null || !local.hasObject(objectId);
 		}
 	}
 }
