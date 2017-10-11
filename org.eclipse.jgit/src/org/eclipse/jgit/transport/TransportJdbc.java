@@ -14,6 +14,7 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -55,6 +56,12 @@ public class TransportJdbc extends Transport {
 
 		@Override
 		public Transport open(URIish uri, Repository local, String remoteName) throws NotSupportedException, TransportException {
+			URIish backupUri;
+			try {
+				backupUri = new URIish(uri.toASCIIString());
+			} catch (URISyntaxException e) {
+				throw new RuntimeException(e);
+			}
 			String username = uri.getUser();
 
 			if ("mysql".equals(uri.getScheme())) {
@@ -104,7 +111,7 @@ public class TransportJdbc extends Transport {
 					password
 				);
 
-				return new TransportJdbc(local, uri, connection);
+				return new TransportJdbc(local, backupUri, connection);
 			} catch (SQLException e) {
 				throw new TransportException("Failed to get a JDBC connection.", e);
 			}
