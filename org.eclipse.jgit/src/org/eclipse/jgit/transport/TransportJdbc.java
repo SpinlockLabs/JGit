@@ -32,6 +32,7 @@ public class TransportJdbc extends Transport {
 			schemes.add("jdbc:mysql");
 			schemes.add("mysql");
 			schemes.add("jdbc:h2");
+			schemes.add("pg");
 			return schemes;
 		}
 
@@ -58,6 +59,10 @@ public class TransportJdbc extends Transport {
 
 			if ("mysql".equals(uri.getScheme())) {
 				uri = uri.setScheme("jdbc:mysql");
+			}
+
+			if ("pg".equals(uri.getScheme())) {
+				uri = uri.setScheme("jdbc:postgresql");
 			}
 
 			if (username == null) {
@@ -112,6 +117,12 @@ public class TransportJdbc extends Transport {
 		super(local, uri);
 
 		this.sql = new SqlRepository(connection);
+
+		try {
+			sql.createIfNotExists();
+		} catch (IOException e) {
+			throw new RuntimeException("Failed to ensure Git repository exists.", e);
+		}
 	}
 
 	public SqlRepository getSqlRepository() {
@@ -185,6 +196,8 @@ public class TransportJdbc extends Transport {
 
 				Set<ObjectId> objects = new HashSet<>();
 
+				long totalObjectCount = sql.getNumberOfObjects();
+
 				for (String key : refUpdates.keySet()) {
 					RemoteRefUpdate update = refUpdates.get(key);
 					ObjectId id = update.getNewObjectId();
@@ -213,16 +226,16 @@ public class TransportJdbc extends Transport {
 						while (walk.next()) {
 							ObjectId treeId = walk.getObjectId(0);
 
-							if (!getSqlRepository().hasObject(treeId)) {
+							if (sqlNeedsObject(treeId, totalObjectCount)) {
 								objects.add(treeId.copy());
 							}
 						}
 
-						if (!getSqlRepository().hasObject(tree)) {
+						if (sqlNeedsObject(tree, totalObjectCount)) {
 							objects.add(tree.copy());
 						}
 
-						if (!getSqlRepository().hasObject(commit)) {
+						if (sqlNeedsObject(commit, totalObjectCount)) {
 							objects.add(commit.copy());
 						}
 
@@ -266,6 +279,10 @@ public class TransportJdbc extends Transport {
 				throw new TransportException("Failed to push.", e);
 			}
 		}
+
+		public boolean sqlNeedsObject(ObjectId id, long objectCount) {
+			return objectCount == 0 || !getSqlRepository().hasObject(id);
+		}
 	}
 
 	class SqlFetchConnection extends SqlConnection implements FetchConnection {
@@ -288,7 +305,7 @@ public class TransportJdbc extends Transport {
 			Set<ObjectId> objects = new HashSet<>();
 
 			try {
-				int potentialObjectCount = 1;
+				long potentialObjectCount = 1;
 
 				try {
 					potentialObjectCount = getSqlRepository().getNumberOfObjects();
@@ -296,7 +313,7 @@ public class TransportJdbc extends Transport {
 					ignored.printStackTrace();
 				}
 
-				monitor.beginTask("Resolving Objects", potentialObjectCount);
+				monitor.beginTask("Resolving Objects", (int) potentialObjectCount);
 
 				int lastSize = 0;
 

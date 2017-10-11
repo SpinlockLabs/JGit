@@ -70,7 +70,7 @@ public class SqlObjectDatabase extends ObjectDatabase {
 		}
 	}
 
-	public int getObjectCount() throws IOException {
+	public long getObjectCount() throws IOException {
 		try {
 			PreparedStatement statement = parent.getAdapter().createObjectCount();
 			ResultSet results = statement.executeQuery();
@@ -79,7 +79,7 @@ public class SqlObjectDatabase extends ObjectDatabase {
 				return -1;
 			}
 
-			return results.getInt(1);
+			return results.getLong(1);
 		} catch (SQLException e) {
 			throw new IOException(e);
 		}

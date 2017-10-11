@@ -25,6 +25,14 @@ public class MySqlLikeAdapter extends SqlDriverAdapter {
 		return "LONGBLOB";
 	}
 
+	protected String getHashType() {
+		return "VARCHAR(512)";
+	}
+
+	protected String getRefType() {
+		return "VARCHAR(512)";
+	}
+
 	@Override
 	public boolean checkObjectsTableExists() throws SQLException {
 		ResultSet results = getRepository().getConnection().prepareStatement(
@@ -159,7 +167,7 @@ public class MySqlLikeAdapter extends SqlDriverAdapter {
 	@Override
 	public PreparedStatement createObjectsTable() throws SQLException {
 		String query = "CREATE TABLE " + quote(getObjectsTableName()) + " (" +
-			"" + quote(getObjectHashColumn()) + " VARCHAR(512)";
+			"" + quote(getObjectHashColumn()) + " " + getHashType();
 
 		if (isRealMySql()) {
 			query += " CHARACTER SET ascii COLLATE ascii_bin";
@@ -176,7 +184,7 @@ public class MySqlLikeAdapter extends SqlDriverAdapter {
 	@Override
 	public PreparedStatement createRefsTable() throws SQLException {
 		String query = "CREATE TABLE " + quote(getRefsTableName()) + " (" +
-			quote(getRefNameColumn()) + " VARCHAR(512)";
+			quote(getRefNameColumn()) + " " + getHashType();
 
 		if (isRealMySql()) {
 			query += " CHARACTER SET ascii COLLATE ascii_bin";
@@ -184,7 +192,7 @@ public class MySqlLikeAdapter extends SqlDriverAdapter {
 
 		query += " NOT NULL PRIMARY KEY," +
 			quote(getRefIsSymbolicColumn()) + " BOOLEAN NOT NULL," +
-			quote(getRefTargetColumn()) + " VARCHAR(512) NOT NULL" +
+			quote(getRefTargetColumn()) + " " + getRefType() + " NOT NULL" +
 			")";
 
 		return getRepository().getConnection().prepareStatement(query);

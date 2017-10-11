@@ -72,6 +72,14 @@ public class SqlRepository extends Repository {
 		RefUpdate head = updateRef(Constants.HEAD);
 		head.disableRefLog();
 		head.link(Constants.R_HEADS + Constants.MASTER);
+
+		try {
+			if (!connection.getAutoCommit()) {
+				connection.commit();
+			}
+		} catch (SQLException e) {
+			throw new IOException(e);
+		}
 	}
 
 	@Override
@@ -123,8 +131,14 @@ public class SqlRepository extends Repository {
 		return adapter;
 	}
 
-	public int getNumberOfObjects() throws IOException {
+	public long getNumberOfObjects() throws IOException {
 		return getObjectDatabase().getObjectCount();
+	}
+
+	public void createIfNotExists() throws IOException {
+		if (!getObjectDatabase().exists()) {
+			create(true);
+		}
 	}
 
 	private static class EmptyAttributesNodeProvider implements

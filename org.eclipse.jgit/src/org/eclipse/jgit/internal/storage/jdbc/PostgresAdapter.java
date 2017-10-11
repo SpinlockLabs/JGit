@@ -16,6 +16,16 @@ public class PostgresAdapter extends MySqlLikeAdapter {
 	}
 
 	@Override
+	protected String getHashType() {
+		return "TEXT";
+	}
+
+	@Override
+	protected String getRefType() {
+		return "TEXT";
+	}
+
+	@Override
 	public void applyToConnection(Connection connection) throws SQLException {
 		connection.setAutoCommit(false);
 	}
@@ -68,7 +78,12 @@ public class PostgresAdapter extends MySqlLikeAdapter {
 	}
 
 	@Override
-	public void createInsertObjectBatch(PreparedStatement statement, String hash, int type, InputStream stream) throws SQLException {
+	public void createInsertObjectBatch(
+		PreparedStatement statement,
+		String hash,
+		int type,
+		InputStream stream
+	) throws SQLException {
 		statement.setString(1, hash);
 		statement.setInt(2, type);
 		try {
