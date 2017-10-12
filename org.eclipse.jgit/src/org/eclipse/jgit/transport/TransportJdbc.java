@@ -205,6 +205,7 @@ public class TransportJdbc extends Transport {
 
 				long totalObjectCount = sql.getNumberOfObjects();
 
+				monitor.beginTask("Counting Objects",refUpdates.size());
 				for (String key : refUpdates.keySet()) {
 					RemoteRefUpdate update = refUpdates.get(key);
 					ObjectId id = update.getNewObjectId();
@@ -250,18 +251,24 @@ public class TransportJdbc extends Transport {
 							break;
 						}
 					}
+
+					monitor.update(1);
 				}
 
 				ObjectInserter inserter = getSqlRepository().newObjectInserter();
+				monitor.beginTask("Sending Objects", objects.size());
 				for (ObjectId send : objects) {
 					ObjectLoader loader = reader.open(send);
 
 					inserter.insert(loader.getType(), loader.getSize(), loader.openStream());
+					monitor.update(1);
 				}
 
+				monitor.beginTask("Writing Objects", 1);
 				inserter.flush();
 				inserter.close();
 				reader.close();
+				monitor.update(1);
 
 				for (String refName : refUpdates.keySet()) {
 					RemoteRefUpdate update = refUpdates.get(refName);

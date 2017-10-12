@@ -1,4 +1,4 @@
-package org.eclipse.jgit.internal.storage.jdbc;
+package org.eclipse.jgit.internal.storage.jdbc.adapter;
 
 import org.eclipse.jgit.util.StringUtils;
 

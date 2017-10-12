@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,7 @@ public class SqlRefDatabase extends RefDatabase {
 			ref = new ObjectIdRef.Unpeeled(Ref.Storage.NEW, name, null);
 		}
 
-		return new SqlRefUpdate(ref);
+		return new SqlRefUpdate(ref, this);
 	}
 
 	@Override
@@ -109,7 +110,7 @@ public class SqlRefDatabase extends RefDatabase {
 
 			if (!results.next()) {
 				statement.close();
-				return null;
+				return new HashMap<>();
 			}
 
 			HashMap<String, Ref> refs = new HashMap<>();
@@ -126,12 +127,12 @@ public class SqlRefDatabase extends RefDatabase {
 
 	@Override
 	public List<Ref> getAdditionalRefs() throws IOException {
-		return null;
+		return new ArrayList<>();
 	}
 
 	@Override
 	public Ref peel(Ref ref) throws IOException {
-		return null;
+		return ref;
 	}
 
 	@Override
@@ -145,118 +146,7 @@ public class SqlRefDatabase extends RefDatabase {
 		}
 	}
 
-	public class SqlRefUpdate extends RefUpdate {
-		public SqlRefUpdate(final Ref ref) {
-			super(ref);
-		}
-
-		@Override
-		protected RefDatabase getRefDatabase() {
-			return SqlRefDatabase.this;
-		}
-
-		@Override
-		protected SqlRepository getRepository() {
-			return parent;
-		}
-
-		@Override
-		protected boolean tryLock(boolean deref) throws IOException {
-			return true;
-		}
-
-		@Override
-		protected void unlock() {
-		}
-
-		@Override
-		protected Result doUpdate(Result status) throws IOException {
-			try {
-				PreparedStatement statement = getRepository().getAdapter().createReadRef(getName());
-				ResultSet results = statement.executeQuery();
-				boolean exists = results.next();
-				results.close();
-
-				if (exists) {
-					statement = getRepository().getAdapter().createUpdateRef(
-						getName(),
-						getRef().isSymbolic(),
-						getNewObjectId().name()
-					);
-
-					if (statement.executeUpdate() == 0) {
-						return Result.NO_CHANGE;
-					} else {
-						return status;
-					}
-				} else {
-					statement = getRepository().getAdapter().createRef(
-						getName(),
-						getRef().isSymbolic(),
-						getNewObjectId().name()
-					);
-
-					if (statement.executeUpdate() == 0) {
-						return Result.REJECTED;
-					} else {
-						return status;
-					}
-				}
-			} catch (SQLException e) {
-				throw new IOException(e);
-			}
-		}
-
-		@Override
-		protected Result doDelete(Result status) throws IOException {
-			try {
-				PreparedStatement statement = getRepository().getAdapter().createDeleteRef(
-					getName()
-				);
-
-				statement.setString(1, getRef().getName());
-				if (statement.executeUpdate() == 0) {
-					return Result.REJECTED;
-				}
-				return status;
-			} catch (SQLException e) {
-				throw new IOException(e);
-			}
-		}
-
-		@Override
-		protected Result doLink(String target) throws IOException {
-			try {
-				PreparedStatement statement = getRepository().getAdapter().createReadRef(getName());
-				ResultSet results = statement.executeQuery();
-				boolean exists = results.next();
-				results.close();
-
-				if (exists) {
-					statement = getRepository().getAdapter().createUpdateRef(
-						getName(),
-						true,
-						target
-					);
-
-					if (statement.executeUpdate() == 0) {
-						return Result.REJECTED;
-					}
-					return Result.NEW;
-				} else {
-					statement = getRepository().getAdapter().createLinkRef(
-						getName(),
-						target
-					);
-
-					if (statement.executeUpdate() == 0) {
-						return Result.REJECTED;
-					}
-					return Result.NEW;
-				}
-			} catch (SQLException e) {
-				throw new IOException(e);
-			}
-		}
+	public SqlRepository getRepository() {
+		return parent;
 	}
 }

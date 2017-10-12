@@ -3,6 +3,10 @@ package org.eclipse.jgit.internal.storage.jdbc;
 import org.eclipse.jgit.attributes.AttributesNode;
 import org.eclipse.jgit.attributes.AttributesNodeProvider;
 import org.eclipse.jgit.attributes.AttributesRule;
+import org.eclipse.jgit.internal.storage.jdbc.adapter.MySqlLikeAdapter;
+import org.eclipse.jgit.internal.storage.jdbc.adapter.PostgresAdapter;
+import org.eclipse.jgit.internal.storage.jdbc.adapter.SqlDriverAdapter;
+import org.eclipse.jgit.internal.storage.jdbc.adapter.SqliteAdapter;
 import org.eclipse.jgit.lib.*;
 
 import java.io.IOException;

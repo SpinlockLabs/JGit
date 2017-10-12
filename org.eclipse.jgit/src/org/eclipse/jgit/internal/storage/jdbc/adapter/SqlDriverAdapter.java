@@ -1,4 +1,6 @@
-package org.eclipse.jgit.internal.storage.jdbc;
+package org.eclipse.jgit.internal.storage.jdbc.adapter;
+
+import org.eclipse.jgit.internal.storage.jdbc.SqlRepository;
 
 import java.io.InputStream;
 import java.sql.Connection;
