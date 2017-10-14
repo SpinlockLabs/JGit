@@ -147,7 +147,7 @@ public class SqlRepository extends Repository {
 
 	private static class EmptyAttributesNodeProvider implements
 		AttributesNodeProvider {
-		private EmptyAttributesNode emptyAttributesNode = new EmptyAttributesNode();
+		private final EmptyAttributesNode emptyAttributesNode = new EmptyAttributesNode();
 
 		@Override
 		public AttributesNode getInfoAttributesNode() throws IOException {
@@ -162,12 +162,11 @@ public class SqlRepository extends Repository {
 		private static class EmptyAttributesNode extends AttributesNode {
 
 			public EmptyAttributesNode() {
-				super(Collections.<AttributesRule> emptyList());
+				super(Collections.emptyList());
 			}
 
 			@Override
 			public void parse(InputStream in) throws IOException {
-				// Do nothing
 			}
 		}
 	}

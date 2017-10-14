@@ -4,8 +4,8 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectIdRef;
 
 public class SqlObjectIdRef extends ObjectIdRef {
-	protected SqlObjectIdRef(Storage st, String name, ObjectId id) {
-		super(st, name, id);
+	protected SqlObjectIdRef(Storage storage, String name, ObjectId id) {
+		super(storage, name, id);
 	}
 
 	@Override

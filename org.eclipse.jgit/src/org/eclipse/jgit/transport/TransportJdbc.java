@@ -254,6 +254,7 @@ public class TransportJdbc extends Transport {
 
 					monitor.update(1);
 				}
+				monitor.endTask();
 
 				ObjectInserter inserter = getSqlRepository().newObjectInserter();
 				monitor.beginTask("Sending Objects", objects.size());
@@ -263,6 +264,7 @@ public class TransportJdbc extends Transport {
 					inserter.insert(loader.getType(), loader.getSize(), loader.openStream());
 					monitor.update(1);
 				}
+				monitor.endTask();
 
 				monitor.beginTask("Writing Objects", 1);
 				inserter.flush();
@@ -289,6 +291,7 @@ public class TransportJdbc extends Transport {
 						update.setStatus(RemoteRefUpdate.Status.UP_TO_DATE);
 					}
 				}
+				monitor.endTask();
 			} catch (Exception e) {
 				throw new TransportException("Failed to push.", e);
 			}
@@ -324,7 +327,6 @@ public class TransportJdbc extends Transport {
 				try {
 					potentialObjectCount = getSqlRepository().getNumberOfObjects();
 				} catch (IOException ignored) {
-					ignored.printStackTrace();
 				}
 
 				monitor.beginTask("Resolving Objects", (int) potentialObjectCount);
@@ -373,6 +375,7 @@ public class TransportJdbc extends Transport {
 
 					revWalk.close();
 				}
+				monitor.endTask();
 
 				monitor.beginTask("Download Objects", objects.size());
 				for (ObjectId id : objects) {
@@ -388,6 +391,7 @@ public class TransportJdbc extends Transport {
 				inserter.flush();
 				inserter.close();
 				reader.close();
+				monitor.endTask();
 			} catch (Exception e) {
 				throw new TransportException("Failed to fetch.", e);
 			}

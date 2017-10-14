@@ -15,8 +15,8 @@ public class MySqlLikeAdapter extends SqlDriverAdapter {
 
 	protected String columnNames(String... names) {
 		ArrayList<String> realNames = new ArrayList<>(names.length);
-		for (int i = 0; i < names.length; i++) {
-			realNames.add(quote(names[i]));
+		for (String name : names) {
+			realNames.add(quote(name));
 		}
 		return StringUtils.join(realNames, ",");
 	}

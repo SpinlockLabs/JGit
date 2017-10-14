@@ -102,7 +102,7 @@ public class SqlObjectDatabase extends ObjectDatabase {
 				ResultSet results = statement.executeQuery();
 
 				while (results.next()) {
-					String oid = results.getString(0);
+					String oid = results.getString(1);
 					ids.add(ObjectId.fromString(oid));
 				}
 				return ids;
